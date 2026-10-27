@@ -1,0 +1,78 @@
+{
+  "rules": {
+    "klascodes": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && ((!data.exists() && newData.isString() && root.child('klassen').child(newData.val()).child('eigenaar').val() === auth.uid) || (data.exists() && !newData.exists() && root.child('klassen').child(data.val()).child('eigenaar').val() === auth.uid))"
+      }
+    },
+
+    "klassen": {
+      ".indexOn": ["eigenaar"],
+      ".read": "auth != null && query.orderByChild === 'eigenaar' && query.equalTo === auth.uid",
+      "$klas": {
+        ".read": "auth != null && data.child('eigenaar').val() === auth.uid",
+        ".write": "auth != null && (data.exists() ? data.child('eigenaar').val() === auth.uid : (newData.child('eigenaar').val() === auth.uid && auth.token.email_verified === true && auth.token.email.endsWith('@levwn.nl')))",
+        ".validate": "newData.hasChildren(['naam', 'eigenaar', 'code'])",
+        "naam": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
+        "eigenaar": { ".validate": "newData.val() === auth.uid" },
+        "code": { ".validate": "newData.isString() && newData.val().length === 6" },
+        "aangemaakt": { ".validate": "newData.isNumber()" },
+        "leerlingen": {
+          ".read": "auth != null",
+          "$lln": {
+            ".validate": "newData.hasChildren(['naam', 'niveau', 'flitsTijd'])",
+            "naam": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30" },
+            "niveau": { ".validate": "newData.val() === 'mkm' || newData.val() === 'mkmm' || newData.val() === 'mmkm' || newData.val() === 'mmkmm'" },
+            "flitsTijd": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
+            "$anders": { ".validate": false }
+          }
+        },
+        "$anders": { ".validate": false }
+      }
+    },
+
+    "voortgang": {
+      "$klas": {
+        ".read": "auth != null && root.child('klassen').child($klas).child('eigenaar').val() === auth.uid",
+        ".write": "auth != null && !newData.exists() && root.child('klassen').child($klas).child('eigenaar').val() === auth.uid",
+        "$lln": {
+          ".read": "auth != null && root.child('klassen').child($klas).child('leerlingen').child($lln).exists()",
+          ".write": "auth != null && (newData.exists() ? root.child('klassen').child($klas).child('leerlingen').child($lln).exists() : root.child('klassen').child($klas).child('eigenaar').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['blok', 'woordInBlok', 'medailles'])",
+          "blok": { ".validate": "newData.isNumber() && newData.val() >= 1" },
+          "woordInBlok": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() < 30" },
+          "medailles": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "niveau": { ".validate": "newData.isString() && newData.val().length <= 6" },
+          "blokWoorden": { "$i": { ".validate": "newData.isString() && newData.val().length <= 20" } },
+          "blokUitslag": { "$i": { ".validate": "newData.val() === 'g' || newData.val() === 'h' || newData.val() === 'f'" } },
+          "laatst": { ".validate": "newData.isNumber()" },
+          "$anders": { ".validate": false }
+        }
+      }
+    },
+
+    "pogingen": {
+      "$klas": {
+        ".read": "auth != null && root.child('klassen').child($klas).child('eigenaar').val() === auth.uid",
+        ".write": "auth != null && !newData.exists() && root.child('klassen').child($klas).child('eigenaar').val() === auth.uid",
+        "$lln": {
+          ".write": "auth != null && !newData.exists() && root.child('klassen').child($klas).child('eigenaar').val() === auth.uid",
+          "$id": {
+            ".write": "auth != null && !data.exists() && newData.exists() && root.child('klassen').child($klas).child('leerlingen').child($lln).exists()",
+            ".validate": "newData.hasChildren(['woord', 'getypt', 'goed', 'poging', 'niveau', 'blok', 'beurt', 'tijd'])",
+            "woord": { ".validate": "newData.isString() && newData.val().length <= 20" },
+            "getypt": { ".validate": "newData.isString() && newData.val().length <= 40" },
+            "goed": { ".validate": "newData.isBoolean()" },
+            "poging": { ".validate": "newData.val() === 1 || newData.val() === 2" },
+            "niveau": { ".validate": "newData.isString() && newData.val().length <= 6" },
+            "blok": { ".validate": "newData.isNumber()" },
+            "beurt": { ".validate": "newData.isString() && newData.val().length <= 20" },
+            "tijd": { ".validate": "newData.val() === now" },
+            "$anders": { ".validate": false }
+          }
+        }
+      }
+    }
+  }
+}

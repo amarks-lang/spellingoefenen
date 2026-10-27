@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Spelling oefenen</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='18' r='12' fill='%23f3aa19'/%3E%3Cpath d='M9 2h6l4 8-4 2zM23 2h-6l-4 8 4 2z' fill='%23d86313'/%3E%3C/svg%3E">
+  <link rel="preload" href="fonts/andika-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/oefenen.css">
+  <script type="module" src="js/oefenen.js"></script>
+</head>
+<body data-fase="laden">
+
+  <header class="balk" hidden>
+    <div class="kralen" id="kralen" role="img" aria-label="Voortgang in dit blok"></div>
+    <div class="teller" aria-label="Medailles">
+      <svg class="mini-medaille" viewBox="0 0 200 260" aria-hidden="true">
+        <use href="#medaille-vorm"/>
+      </svg>
+      <span id="aantal-medailles">0</span>
+    </div>
+    <span class="opslagfout" id="opslagfout" title="Opslaan lukt niet. Is er internet?" hidden>!</span>
+  </header>
+
+  <main>
+    <section data-scherm="laden" class="laden" aria-label="Laden">
+      <span class="stip"></span><span class="stip"></span><span class="stip"></span>
+    </section>
+
+    <section data-scherm="code" hidden>
+      <form id="code-form" class="code-form" autocomplete="off">
+        <label for="code-invoer">Klascode</label>
+        <div class="code-rij">
+          <input id="code-invoer" maxlength="6" spellcheck="false" autocapitalize="characters"
+                 autocorrect="off" autocomplete="off" inputmode="text" aria-describedby="code-melding">
+          <button class="rondknop" aria-label="Verder">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+        </div>
+        <p class="code-melding" id="code-melding" role="alert"></p>
+      </form>
+      <a class="leerkrachtlink" href="leerkracht.html">Leerkracht</a>
+    </section>
+
+    <section data-scherm="namen" hidden>
+      <div class="namen" id="namen"></div>
+    </section>
+
+    <section data-scherm="start" hidden class="start">
+      <h1 id="groet">Hoi!</h1>
+      <button id="start-knop" class="speelknop" aria-label="Start">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+    </section>
+
+    <section data-scherm="kijk" hidden class="kijk">
+      <div class="schrift" id="schrift-kijk"><span class="woord" id="woord-kijk"></span></div>
+      <div class="onder"><div class="lont" aria-hidden="true"><div class="lont-rest" id="lont"></div></div></div>
+    </section>
+
+    <section data-scherm="typ" hidden class="typ">
+      <form id="typ-form" autocomplete="off">
+        <input id="typ-invoer" class="schrift" aria-label="Typ het woord"
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+               data-gramm="false" maxlength="20">
+        <div class="onder">
+          <button class="enterknop" aria-label="Klaar">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6v6H7.8l3.6-3.6L10 7l-6 6 6 6 1.4-1.4L7.8 14H21V6z"/></svg>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section data-scherm="goed" hidden class="uitslag">
+      <svg class="teken" viewBox="0 0 24 24" aria-label="Goed"><path d="M4 12.5l5 5L20 6.5"/></svg>
+      <div class="schrift licht" id="schrift-goed"><span class="woord" id="woord-goed"></span></div>
+    </section>
+
+    <section data-scherm="fout" hidden class="uitslag">
+      <svg class="teken" viewBox="0 0 24 24" aria-label="Fout"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </section>
+
+    <section data-scherm="juist" hidden class="kijk juist">
+      <svg class="oog" viewBox="0 0 48 32" aria-label="Kijk goed">
+        <path d="M2 16C8 6 16 2 24 2s16 4 22 14c-6 10-14 14-22 14S8 26 2 16z"/>
+        <circle cx="24" cy="16" r="7"/>
+      </svg>
+      <div class="schrift" id="schrift-juist"><span class="woord" id="woord-juist"></span></div>
+    </section>
+
+    <section data-scherm="medaille" hidden class="medaille-scherm">
+      <svg class="medaille" viewBox="0 0 200 260" aria-hidden="true">
+        <use href="#medaille-vorm"/>
+        <text x="100" y="196" text-anchor="middle" id="medaille-getal">1</text>
+      </svg>
+      <button id="verder-knop" class="speelknop" aria-label="Nog een blok">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+    </section>
+
+    <section data-scherm="melding" hidden class="melding">
+      <p id="melding-tekst"></p>
+    </section>
+  </main>
+
+  <script>
+    // Laadt de app niet (geen internet, of een filter blokkeert Firebase)? Dan niet eindeloos blijven laden.
+    setTimeout(function () {
+      if (window.__spellingGestart) return;
+      document.querySelectorAll('[data-scherm]').forEach(function (s) { s.hidden = s.dataset.scherm !== 'melding'; });
+      document.getElementById('melding-tekst').textContent = 'De oefensite laadt niet. Controleer de internetverbinding of vraag de leerkracht.';
+    }, 12000);
+  </script>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <g id="medaille-vorm">
+        <path d="M44 0h40l30 104-24 8z" fill="#d86313"/>
+        <path d="M156 0h-40L86 104l24 8z" fill="#9e3a16"/>
+        <circle cx="100" cy="172" r="80" fill="#f3aa19"/>
+        <circle cx="100" cy="172" r="62" fill="none" stroke="#fbd16b" stroke-width="8"/>
+        <circle cx="100" cy="172" r="80" fill="none" stroke="#d86313" stroke-width="4"/>
+      </g>
+    </defs>
+  </svg>
+</body>
+</html>

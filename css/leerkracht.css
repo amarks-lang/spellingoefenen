@@ -1,0 +1,228 @@
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(../fonts/atkinson-hyperlegible-latin-400-normal.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(../fonts/atkinson-hyperlegible-latin-700-normal.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Andika';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(../fonts/andika-latin-400-normal.woff2) format('woff2');
+}
+
+:root {
+  --grond: #f7f8f2;
+  --vlak: #ffffff;
+  --inkt: #22301a;
+  --zacht: #5b6652;
+  --rand: #dfe3d4;
+  --roest: #9e3a16;
+  --oranje: #d86313;
+  --geel: #f3aa19;
+  --groen: #5f9227;
+  --lime: #b3be11;
+  --fout: #b8441b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--grond);
+  color: var(--inkt);
+  font: 16px/1.5 'Atkinson Hyperlegible', system-ui, sans-serif;
+}
+
+[hidden] { display: none !important; }
+
+.verborgen {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* vijf schoolkleuren als dunne streep bovenaan */
+.streep { display: flex; height: 6px; }
+.streep span { flex: 1; }
+.streep span:nth-child(1) { background: var(--roest); }
+.streep span:nth-child(2) { background: var(--oranje); }
+.streep span:nth-child(3) { background: var(--geel); }
+.streep span:nth-child(4) { background: var(--groen); }
+.streep span:nth-child(5) { background: var(--lime); }
+
+.kop {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  max-width: 1280px; margin: 0 auto; padding: 18px 24px;
+}
+.merk { margin: 0; font-size: 20px; }
+.merk span { color: var(--zacht); margin-left: 6px; }
+.gebruiker { display: flex; align-items: center; gap: 12px; color: var(--zacht); }
+
+main { max-width: 1280px; margin: 0 auto; padding: 8px 24px 64px; }
+
+h1 { font-size: 30px; line-height: 1.2; margin: 0 0 6px; }
+h2 { font-size: 18px; margin: 0 0 12px; }
+p { margin: 0 0 12px; }
+.zacht { color: var(--zacht); }
+
+.paneel {
+  background: var(--vlak);
+  border: 1px solid var(--rand);
+  border-radius: 12px;
+  padding: 28px;
+}
+.smal { max-width: 520px; margin: 48px auto; }
+
+.knop {
+  font: 700 15px/1 'Atkinson Hyperlegible', sans-serif;
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--roest);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.knop:hover { background: #84300f; }
+.knop.stil { background: transparent; color: var(--inkt); border: 1px solid var(--rand); }
+.knop.stil:hover { background: #eef0e6; }
+.knop.klein { padding: 7px 10px; font-size: 14px; }
+.knop.gevaar-stil { background: transparent; color: var(--fout); border: 1px solid var(--rand); }
+.knop.gevaar-stil:hover, .knop.gevaar { background: var(--fout); color: #fff; border-color: var(--fout); }
+.knop.gelukt { background: var(--groen); color: #fff; border-color: var(--groen); }
+
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--oranje);
+  outline-offset: 2px;
+}
+
+input, select {
+  font: 16px 'Atkinson Hyperlegible', sans-serif;
+  color: var(--inkt);
+  padding: 9px 12px;
+  border: 1px solid #c4cab5;
+  border-radius: 8px;
+  background: #fff;
+}
+select { padding: 6px 8px; }
+
+.regel { display: flex; gap: 8px; }
+.regel input { flex: 1; min-width: 0; }
+
+.foutmelding { color: var(--fout); margin-top: 12px; }
+.leeg { color: var(--zacht); padding: 16px 0; }
+
+/* klassen als tabbladen bovenaan, nieuwe klas rechts ernaast */
+.klassenbalk {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  border-bottom: 1px solid var(--rand);
+  margin-bottom: 28px;
+}
+.tabs { list-style: none; display: flex; flex-wrap: wrap; gap: 4px; padding: 0; margin: 0; }
+.klasknop {
+  font: 16px 'Atkinson Hyperlegible', sans-serif;
+  padding: 10px 16px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--zacht);
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+.klasknop:hover { color: var(--inkt); }
+.klasknop.actief { color: var(--inkt); font-weight: 700; border-bottom-color: var(--roest); }
+.klassenbalk .regel { margin-bottom: 10px; width: min(100%, 380px); }
+.klassenbalk input { padding: 7px 10px; font-size: 15px; }
+.klassenbalk .knop { padding: 8px 12px; }
+
+.klaskop {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 24px;
+  margin-bottom: 20px;
+}
+.klaskop p { max-width: 62ch; }
+.code {
+  font: 700 17px 'Andika', sans-serif;
+  letter-spacing: .1em;
+  color: var(--inkt);
+  background: #fff3d6;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+#nieuwe-leerling { max-width: 460px; margin-bottom: 20px; }
+
+.tabelvak { overflow-x: auto; background: var(--vlak); border: 1px solid var(--rand); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: 10px 12px; text-align: left; vertical-align: middle; }
+thead th {
+  font-size: 13px; font-weight: 700; color: var(--zacht);
+  border-bottom: 1px solid var(--rand);
+  white-space: nowrap;
+}
+tbody tr + tr td { border-top: 1px solid #eceee5; }
+td.naam { font-weight: 700; }
+.getal { text-align: right; font-variant-numeric: tabular-nums; }
+td.acties { white-space: nowrap; text-align: right; }
+td.acties .knop + .knop { margin-left: 6px; }
+tr.gekozen td { background: #fff8e8; }
+
+.bol {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  margin-right: 5px; vertical-align: 0;
+}
+.resultaat { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.resultaat .r { display: inline-block; min-width: 3.4em; }
+.legenda {
+  display: flex; flex-wrap: wrap; gap: 18px;
+  margin: 0; padding: 10px 12px;
+  border-top: 1px solid #eceee5;
+  font-size: 13px; color: var(--zacht);
+}
+.bol.g { background: var(--groen); }
+.bol.h { background: var(--lime); }
+.bol.f { background: var(--fout); }
+
+/* fouten van één leerling */
+.fouten {
+  margin-top: 28px;
+  background: var(--vlak);
+  border: 1px solid var(--rand);
+  border-radius: 12px;
+  padding: 20px 20px 8px;
+}
+.fouten-kop { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.vaak-fout { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+.vaak-fout:empty { display: none; }
+.vaak-fout .woordchip {
+  font: 17px 'Andika', sans-serif;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fbe9e2;
+}
+.vaak-fout .woordchip b { font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 14px; color: var(--fout); margin-left: 4px; }
+.foutentabel td.w { font: 19px 'Andika', sans-serif; }
+.foutentabel td.fout-getypt { font: 19px 'Andika', sans-serif; color: var(--fout); }
+.foutentabel td.goed-getypt { font: 19px 'Andika', sans-serif; color: var(--groen); }
+.uitkomst {
+  display: inline-block; font-size: 13px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+}
+.uitkomst.h { background: #eef1c4; color: #4d5300; }
+.uitkomst.f { background: #fbe0d6; color: #8a2f0f; }
+
+@media (max-width: 860px) {
+  .klassenbalk { flex-direction: column-reverse; align-items: stretch; }
+  .klaskop { flex-direction: column; }
+}

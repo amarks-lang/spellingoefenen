@@ -1,0 +1,338 @@
+@font-face {
+  font-family: 'Andika';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(../fonts/andika-latin-400-normal.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Andika';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(../fonts/andika-latin-700-normal.woff2) format('woff2');
+}
+
+:root {
+  /* De Linde-kleuren, aangevuld met een rustige ondergrond */
+  --grond: #f2f5e4;
+  --inkt: #22301a;
+  --inkt-zacht: rgba(34, 48, 26, .55);
+  --lijn: rgba(34, 48, 26, .22);
+  --band: rgba(243, 170, 25, .18);
+  --goed: #5f9227;
+  --herkansing: #b3be11;
+  --fout: #b8441b;
+  --goud: #f3aa19;
+  --oranje: #d86313;
+  --roest: #9e3a16;
+  --woordgrootte: clamp(72px, 15vw, 190px);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--grond);
+  color: var(--inkt);
+  font-family: 'Andika', 'Atkinson Hyperlegible', system-ui, sans-serif;
+  transition: background-color .18s ease;
+  overflow: hidden;
+}
+
+body[data-fase="goed"] { background: var(--goed); color: #fff; }
+body[data-fase="fout"] { background: var(--fout); color: #fff; }
+
+[hidden] { display: none !important; }
+
+/* ---------- bovenbalk: kralensnoer + medailles ---------- */
+
+.balk {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 22px clamp(16px, 4vw, 48px) 0;
+}
+
+.kralen {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(30, minmax(0, 1fr));
+  gap: clamp(3px, .6vw, 8px);
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative;
+}
+.kralen::before {               /* het touwtje */
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 2px;
+  background: var(--lijn);
+}
+.kraal {
+  position: relative;
+  aspect-ratio: 1;
+  max-height: 30px;
+  border-radius: 50%;
+  background: var(--grond);
+  border: 3px solid rgba(34, 48, 26, .28);
+  transition: background-color .25s, border-color .25s, transform .25s;
+}
+.kraal.k-g { background: var(--goed); border-color: var(--goed); }
+.kraal.k-h { background: var(--herkansing); border-color: var(--herkansing); }
+.kraal.k-f { background: var(--fout); border-color: var(--fout); }
+.kraal.k-nu { border-color: var(--oranje); transform: scale(1.18); }
+body[data-fase="goed"] .kraal, body[data-fase="fout"] .kraal { border-color: rgba(255, 255, 255, .55); }
+body[data-fase="goed"] .kraal.k-nu, body[data-fase="fout"] .kraal.k-nu { background: transparent; }
+
+.teller {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 34px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.mini-medaille { width: 34px; height: 44px; }
+
+.opslagfout {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--fout); color: #fff;
+  font-weight: 700; font-size: 22px;
+}
+
+/* ---------- schermen ---------- */
+
+.balk { grid-row: 1; }
+main {
+  grid-row: 2;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px 56px;
+  min-height: 0;
+}
+
+/* ruimte onder het woord: even hoog bij kijken en typen, zodat de lijnen op hun plek blijven */
+.onder {
+  height: 128px;
+  padding-top: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+main > section { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+.laden { flex-direction: row !important; justify-content: center; gap: 14px; }
+.stip {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--oranje);
+  animation: hup 1s ease-in-out infinite;
+}
+.stip:nth-child(2) { animation-delay: .15s; background: var(--goud); }
+.stip:nth-child(3) { animation-delay: .3s; background: var(--goed); }
+@keyframes hup { 0%, 100% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(-12px); opacity: 1; } }
+
+/* ---------- schrijflijnen ----------
+   Het woord staat op lijnen zoals in een schrijfschrift; het kind typt op dezelfde lijnen.
+   De lijnhoogtes rekent js/oefenen.js uit met de echte maten van het lettertype. */
+
+.schrift {
+  display: block;
+  width: min(94vw, 1040px);
+  height: calc(var(--woordgrootte) * 1.5);
+  line-height: calc(var(--woordgrootte) * 1.5);
+  font-size: var(--woordgrootte);
+  font-family: inherit;
+  text-align: center;
+  white-space: nowrap;
+  color: inherit;
+  background:
+    linear-gradient(var(--lijn), var(--lijn)) 0 var(--y-stok, -9px) / 100% 2px no-repeat,
+    linear-gradient(var(--lijn), var(--lijn)) 0 var(--y-x, -9px) / 100% 2px no-repeat,
+    linear-gradient(var(--inkt-zacht), var(--inkt-zacht)) 0 var(--y-basis, -9px) / 100% 3px no-repeat,
+    linear-gradient(var(--lijn), var(--lijn)) 0 var(--y-staart, -9px) / 100% 2px no-repeat,
+    linear-gradient(var(--band), var(--band)) 0 var(--y-x, -9px) / 100% var(--band-h, 0px) no-repeat;
+}
+.schrift.licht {
+  --lijn: rgba(255, 255, 255, .35);
+  --inkt-zacht: rgba(255, 255, 255, .7);
+  --band: rgba(255, 255, 255, .12);
+}
+.woord { letter-spacing: .02em; }
+
+/* lont: hoeveel kijktijd er nog is */
+.lont {
+  width: min(60vw, 520px);
+  height: 12px;
+  margin-top: 38px;
+  border-radius: 6px;
+  background: rgba(34, 48, 26, .1);
+  overflow: hidden;
+}
+.lont-rest {
+  height: 100%;
+  border-radius: 6px;
+  background: var(--oranje);
+  transform-origin: left center;
+}
+
+/* typen */
+#typ-form { display: flex; flex-direction: column; align-items: center; }
+input.schrift {
+  border: 0;
+  padding: 0;
+  outline: none;
+  caret-color: var(--oranje);
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input.schrift:focus { --band: rgba(243, 170, 25, .3); }
+
+.enterknop, .rondknop {
+  display: grid; place-items: center;
+  width: 88px; height: 88px;
+  border: 0; border-radius: 50%;
+  background: var(--inkt); color: var(--grond);
+  cursor: pointer;
+}
+.enterknop svg, .rondknop svg { width: 46px; height: 46px; fill: currentColor; }
+
+/* goed / fout */
+.uitslag { gap: 8px; }
+.teken {
+  width: clamp(120px, 20vw, 220px);
+  height: clamp(120px, 20vw, 220px);
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+[data-scherm="fout"] .teken { animation: schud .4s ease-in-out; }
+@keyframes schud { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-14px); } 75% { transform: translateX(14px); } }
+[data-scherm="goed"] .schrift { height: calc(var(--woordgrootte) * 1.2); line-height: calc(var(--woordgrootte) * 1.2); }
+
+/* goede woord laten zien na twee keer fout */
+.juist .oog {
+  width: 96px; height: 64px;
+  fill: none; stroke: var(--inkt); stroke-width: 3; stroke-linejoin: round;
+  margin-bottom: 4px;
+}
+.juist .oog circle { fill: var(--inkt); }
+
+/* start */
+.start { gap: 40px; }
+.start h1 {
+  margin: 0;
+  font-size: clamp(56px, 9vw, 120px);
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+.speelknop {
+  display: grid; place-items: center;
+  width: 168px; height: 168px;
+  border: 0; border-radius: 50%;
+  background: var(--goud);
+  color: var(--inkt);
+  cursor: pointer;
+  box-shadow: inset 0 -10px 0 rgba(158, 58, 22, .25);
+  transition: transform .12s ease;
+}
+.speelknop svg { width: 92px; height: 92px; fill: currentColor; margin-left: 10px; }
+.speelknop:hover { transform: scale(1.04); }
+.speelknop:active { transform: scale(.97); }
+
+button:focus-visible, a:focus-visible, select:focus-visible {
+  outline: 5px solid var(--oranje);
+  outline-offset: 5px;
+}
+
+/* medaille: het ene feestmoment */
+.medaille-scherm { gap: 36px; }
+.medaille {
+  width: clamp(180px, 26vw, 280px);
+  height: auto;
+  transform-origin: 50% 0;
+  animation: val 1.1s cubic-bezier(.3, 1.4, .5, 1) both;
+}
+.medaille text {
+  font-family: 'Andika', sans-serif;
+  font-size: 76px;
+  font-weight: 700;
+  fill: var(--roest);
+}
+@keyframes val {
+  0% { transform: translateY(-70vh) rotate(-14deg); }
+  55% { transform: translateY(0) rotate(9deg); }
+  75% { transform: rotate(-5deg); }
+  90% { transform: rotate(2deg); }
+  100% { transform: none; }
+}
+.medaille-scherm .speelknop { animation: verschijn .3s ease 1.1s both; }
+@keyframes verschijn { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: none; } }
+
+/* klascode en namen (voor de leerkracht of een volwassene) */
+.code-form { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.code-form label { font-size: 32px; font-weight: 700; }
+.code-rij { display: flex; gap: 16px; align-items: center; }
+#code-invoer {
+  width: 5.8em;
+  font: 700 64px/1.2 'Andika', sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 8px 12px;
+  border: 3px solid var(--inkt);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--inkt);
+}
+#code-invoer:focus { outline: 5px solid var(--oranje); outline-offset: 3px; }
+.code-melding { min-height: 1.4em; margin: 0; font-size: 22px; color: var(--fout); }
+.leerkrachtlink {
+  position: fixed; right: 20px; bottom: 16px;
+  color: var(--inkt-zacht); font-size: 16px;
+}
+
+.namen {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 16px;
+  max-width: 1000px;
+}
+.naamknop {
+  font: 700 40px/1 'Andika', sans-serif;
+  padding: 22px 34px;
+  border: 3px solid var(--inkt);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--inkt);
+  cursor: pointer;
+}
+.naamknop:hover { background: var(--goud); }
+.namen .leeg { font-size: 26px; }
+
+.melding p {
+  max-width: 30ch;
+  font-size: 28px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+@media (max-height: 640px) {
+  :root { --woordgrootte: clamp(64px, 12vw, 140px); }
+  .speelknop { width: 132px; height: 132px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* de lont blijft lopen: die vertelt hoeveel kijktijd er nog is */
+  *:not(.lont-rest), *::before, *::after { animation: none !important; transition: none !important; }
+}

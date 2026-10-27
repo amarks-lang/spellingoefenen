@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Spelling oefenen · leerkracht</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='18' r='12' fill='%23f3aa19'/%3E%3Cpath d='M9 2h6l4 8-4 2zM23 2h-6l-4 8 4 2z' fill='%23d86313'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/leerkracht.css">
+  <script type="module" src="js/leerkracht.js"></script>
+</head>
+<body>
+  <div class="streep" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+
+  <header class="kop">
+    <p class="merk"><strong>Spelling oefenen</strong> <span>leerkrachtpagina</span></p>
+    <div class="gebruiker" id="gebruiker" hidden>
+      <span id="gebruiker-mail"></span>
+      <button id="uitloggen" class="knop stil">Uitloggen</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="s-melding" class="paneel smal" hidden>
+      <p id="melding-tekst"></p>
+    </section>
+
+    <section id="s-laden" class="paneel smal">
+      <p class="zacht">Even laden…</p>
+    </section>
+
+    <section id="s-login" class="paneel smal" hidden>
+      <h1>Inloggen</h1>
+      <p>Log in met je schoolaccount om je klas, de oefenlinks en de fouten van je leerlingen te zien.</p>
+      <button id="login" class="knop">Inloggen met Google</button>
+      <p id="login-fout" class="foutmelding" role="alert"></p>
+    </section>
+
+    <section id="s-app" class="app" hidden>
+      <div class="klassenbalk">
+        <nav aria-label="Klassen"><ul id="klaslijst" class="tabs"></ul></nav>
+        <form id="nieuwe-klas" class="regel">
+          <label class="verborgen" for="klasnaam">Naam van de nieuwe klas</label>
+          <input id="klasnaam" placeholder="Nieuwe klas, bijv. Groep 4" maxlength="40" required>
+          <button class="knop stil">Klas aanmaken</button>
+        </form>
+      </div>
+
+      <div class="klasvak">
+        <p id="geen-klas" class="leeg" hidden>Maak rechtsboven een klas aan. Daarna kun je leerlingen toevoegen en hun oefenlinks kopiëren.</p>
+
+        <div id="klas" hidden>
+          <div class="klaskop">
+            <div>
+              <h1 id="klas-naam"></h1>
+              <p class="zacht">Klascode <strong id="klas-code" class="code"></strong>. Leerlingen openen de site met hun eigen oefenlink; zet die als bladwijzer op hun Chromebook.</p>
+            </div>
+            <button id="klas-verwijderen" class="knop gevaar-stil">Klas verwijderen</button>
+          </div>
+
+          <form id="nieuwe-leerling" class="regel">
+            <label class="verborgen" for="lln-naam">Voornaam van de nieuwe leerling</label>
+            <input id="lln-naam" placeholder="Voornaam" maxlength="30" required>
+            <button class="knop">Leerling toevoegen</button>
+          </form>
+
+          <div class="tabelvak">
+            <table class="leerlingen">
+              <thead>
+                <tr>
+                  <th>Leerling</th>
+                  <th>Niveau</th>
+                  <th>Flitstijd</th>
+                  <th class="getal">Woorden</th>
+                  <th>Resultaat</th>
+                  <th class="getal">Medailles</th>
+                  <th>Laatst geoefend</th>
+                  <th><span class="verborgen">Acties</span></th>
+                </tr>
+              </thead>
+              <tbody id="lln-rijen"></tbody>
+            </table>
+            <p class="legenda">
+              <span><span class="bol g"></span>in één keer goed</span>
+              <span><span class="bol h"></span>goed na herkansing</span>
+              <span><span class="bol f"></span>fout</span>
+            </p>
+          </div>
+          <p id="geen-leerlingen" class="leeg" hidden>Nog geen leerlingen. Voeg hierboven een leerling toe met alleen een voornaam.</p>
+
+          <section id="fouten" class="fouten" hidden>
+            <div class="fouten-kop">
+              <h2 id="fouten-titel"></h2>
+              <button id="fouten-sluiten" class="knop stil">Sluiten</button>
+            </div>
+            <div id="vaak-fout" class="vaak-fout"></div>
+            <table class="foutentabel">
+              <thead>
+                <tr><th>Wanneer</th><th>Woord</th><th>1e poging</th><th>2e poging</th><th>Uitkomst</th></tr>
+              </thead>
+              <tbody id="fouten-rijen"></tbody>
+            </table>
+            <p id="geen-fouten" class="leeg" hidden>Nog geen fouten gemaakt.</p>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Laadt de app niet (geen internet, of een filter blokkeert www.gstatic.com)? Dan een duidelijke melding.
+    setTimeout(function () {
+      if (window.__spellingGestart) return;
+      document.getElementById('s-laden').hidden = true;
+      document.getElementById('s-melding').hidden = false;
+      document.getElementById('melding-tekst').textContent = 'De pagina laadt niet. Controleer de internetverbinding; Firebase wordt geladen vanaf www.gstatic.com.';
+    }, 12000);
+  </script>
+</body>
+</html>
