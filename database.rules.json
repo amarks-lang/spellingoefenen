@@ -7,19 +7,34 @@
       }
     },
 
+    "gedeeld": {
+      "$mail": {
+        ".read": "auth != null && auth.token.email_verified === true && auth.token.email.toLowerCase().replace('.', ',') === $mail",
+        "$klas": {
+          ".write": "auth != null && root.child('klassen').child($klas).child('eigenaar').val() === auth.uid",
+          ".validate": "newData.val() === true"
+        }
+      }
+    },
+
     "klassen": {
       ".indexOn": ["eigenaar"],
       ".read": "auth != null && query.orderByChild === 'eigenaar' && query.equalTo === auth.uid",
       "$klas": {
-        ".read": "auth != null && data.child('eigenaar').val() === auth.uid",
+        ".read": "auth != null && (data.child('eigenaar').val() === auth.uid || (auth.token.email_verified === true && data.child('collegas').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
         ".write": "auth != null && (data.exists() ? data.child('eigenaar').val() === auth.uid : (newData.child('eigenaar').val() === auth.uid && auth.token.email_verified === true && auth.token.email.endsWith('@levwn.nl')))",
         ".validate": "newData.hasChildren(['naam', 'eigenaar', 'code'])",
         "naam": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
-        "eigenaar": { ".validate": "newData.val() === auth.uid" },
+        "eigenaar": { ".validate": "data.exists() ? newData.val() === data.val() : newData.val() === auth.uid" },
+        "eigenaarMail": { ".validate": "newData.isString() && newData.val().length <= 100" },
         "code": { ".validate": "newData.isString() && newData.val().length === 6" },
         "aangemaakt": { ".validate": "newData.isNumber()" },
+        "collegas": {
+          "$mail": { ".validate": "newData.val() === true && $mail.length <= 100" }
+        },
         "leerlingen": {
           ".read": "auth != null",
+          ".write": "auth != null && auth.token.email_verified === true && root.child('klassen').child($klas).child('collegas').child(auth.token.email.toLowerCase().replace('.', ',')).exists()",
           "$lln": {
             ".validate": "newData.hasChildren(['naam', 'niveau', 'flitsTijd'])",
             "naam": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30" },
@@ -34,11 +49,11 @@
 
     "voortgang": {
       "$klas": {
-        ".read": "auth != null && root.child('klassen').child($klas).child('eigenaar').val() === auth.uid",
+        ".read": "auth != null && (root.child('klassen').child($klas).child('eigenaar').val() === auth.uid || (auth.token.email_verified === true && root.child('klassen').child($klas).child('collegas').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
         ".write": "auth != null && !newData.exists() && root.child('klassen').child($klas).child('eigenaar').val() === auth.uid",
         "$lln": {
           ".read": "auth != null && root.child('klassen').child($klas).child('leerlingen').child($lln).exists()",
-          ".write": "auth != null && (newData.exists() ? root.child('klassen').child($klas).child('leerlingen').child($lln).exists() : root.child('klassen').child($klas).child('eigenaar').val() === auth.uid)",
+          ".write": "auth != null && (newData.exists() ? root.child('klassen').child($klas).child('leerlingen').child($lln).exists() : (root.child('klassen').child($klas).child('eigenaar').val() === auth.uid || (auth.token.email_verified === true && root.child('klassen').child($klas).child('collegas').child(auth.token.email.toLowerCase().replace('.', ',')).exists())))",
           ".validate": "newData.hasChildren(['blok', 'woordInBlok', 'medailles'])",
           "blok": { ".validate": "newData.isNumber() && newData.val() >= 1" },
           "woordInBlok": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() < 30" },
@@ -54,10 +69,10 @@
 
     "pogingen": {
       "$klas": {
-        ".read": "auth != null && root.child('klassen').child($klas).child('eigenaar').val() === auth.uid",
+        ".read": "auth != null && (root.child('klassen').child($klas).child('eigenaar').val() === auth.uid || (auth.token.email_verified === true && root.child('klassen').child($klas).child('collegas').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
         ".write": "auth != null && !newData.exists() && root.child('klassen').child($klas).child('eigenaar').val() === auth.uid",
         "$lln": {
-          ".write": "auth != null && !newData.exists() && root.child('klassen').child($klas).child('eigenaar').val() === auth.uid",
+          ".write": "auth != null && !newData.exists() && (root.child('klassen').child($klas).child('eigenaar').val() === auth.uid || (auth.token.email_verified === true && root.child('klassen').child($klas).child('collegas').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
           "$id": {
             ".write": "auth != null && !data.exists() && newData.exists() && root.child('klassen').child($klas).child('leerlingen').child($lln).exists()",
             ".validate": "newData.hasChildren(['woord', 'getypt', 'goed', 'poging', 'niveau', 'blok', 'beurt', 'tijd'])",

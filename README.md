@@ -32,15 +32,24 @@ Data in de database:
 
 ```
 klascodes/{code}                 -> klasId
-klassen/{klasId}                 naam, eigenaar (uid leerkracht), code, leerlingen/{id}: naam, niveau, flitsTijd
+klassen/{klasId}                 naam, eigenaar (uid), eigenaarMail, code,
+                                 collegas/{mail}: true, leerlingen/{id}: naam, niveau, flitsTijd
+gedeeld/{mail}/{klasId}          true  (zodat een duo-collega haar gedeelde klassen kan vinden)
 voortgang/{klasId}/{leerlingId}  blok, woordInBlok, medailles, niveau, blokWoorden, blokUitslag, laatst
 pogingen/{klasId}/{leerlingId}/{id}  woord, getypt, goed, poging (1 of 2), niveau, blok, beurt, tijd
 ```
 
+`{mail}` is het e-mailadres in kleine letters met punten vervangen door komma's
+(`duo.collega@levwn.nl` wordt `duo,collega@levwn,nl`), omdat punten niet in een databasesleutel mogen.
+
+### Klas delen met een duo-collega
+
+De eigenaar van een klas vult bij "Gedeeld met" het e-mailadres van de collega in. Na inloggen ziet de collega de klas als tabblad (met het label *gedeeld*) en kan ze leerlingen toevoegen en verwijderen, niveau en flitstijd aanpassen en alle resultaten en fouten zien. Alleen de eigenaar kan collega's toevoegen of weghalen en de klas verwijderen.
+
 - De oefenlink is `…/spellingoefenen/#KLASCODE/leerlingId`. Zonder link kan een kind ook de klascode intypen en de eigen naam kiezen.
 - Chromebooks bewaren geen cookies of lokale opslag; daarom staat alle voortgang na elk woord in Firebase.
 - Alleen Google-accounts op `@levwn.nl` kunnen een klas aanmaken. Dat staat in `js/config.js` én in `database.rules.json`.
-- Kinderen kunnen alleen hun eigen voortgang lezen en pogingen toevoegen, nooit wijzigen of wissen. Alleen de eigenaar van de klas ziet de pogingen.
+- Kinderen kunnen alleen hun eigen voortgang lezen en pogingen toevoegen, nooit wijzigen of wissen. Alleen de eigenaar van de klas en de collega's met wie de klas gedeeld is zien de pogingen.
 
 ## Woorden aanpassen
 

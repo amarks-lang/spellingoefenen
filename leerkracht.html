@@ -54,6 +54,16 @@
             <div>
               <h1 id="klas-naam"></h1>
               <p class="zacht">Klascode <strong id="klas-code" class="code"></strong>. Leerlingen openen de site met hun eigen oefenlink; zet die als bladwijzer op hun Chromebook.</p>
+              <p id="gedeeld-door" class="gedeeld-door" hidden></p>
+              <div id="delen" class="delen" hidden>
+                <span class="delen-label">Gedeeld met</span>
+                <ul id="collega-lijst" class="collega-lijst"></ul>
+                <form id="nieuwe-collega" class="regel">
+                  <label class="verborgen" for="collega-mail">E-mailadres van je duo-collega</label>
+                  <input id="collega-mail" type="email" placeholder="duo-collega@levwn.nl" autocomplete="off" required>
+                  <button class="knop stil">Collega toevoegen</button>
+                </form>
+              </div>
             </div>
             <button id="klas-verwijderen" class="knop gevaar-stil">Klas verwijderen</button>
           </div>

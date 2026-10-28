@@ -163,6 +163,38 @@ select { padding: 6px 8px; }
 
 #nieuwe-leerling { max-width: 460px; margin-bottom: 20px; }
 
+/* klas delen met een duo-collega */
+.delen {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+  margin-top: 4px;
+}
+.delen-label { font-size: 14px; color: var(--zacht); }
+.collega-lijst { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 0; }
+.collega-lijst li.zacht { font-size: 14px; }
+.collega {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 4px 3px 10px;
+  border: 1px solid var(--rand); border-radius: 999px;
+  background: var(--vlak);
+  font-size: 14px;
+}
+.collega .weghalen {
+  width: 22px; height: 22px; border: 0; border-radius: 50%;
+  background: transparent; color: var(--zacht);
+  font-size: 16px; line-height: 1; cursor: pointer;
+}
+.collega .weghalen:hover { background: #fbe0d6; color: var(--fout); }
+#nieuwe-collega { width: min(100%, 360px); }
+#nieuwe-collega input { padding: 6px 10px; font-size: 14px; }
+#nieuwe-collega .knop { padding: 7px 10px; font-size: 14px; }
+.gedeeld-door { font-size: 14px; color: var(--zacht); }
+.label-gedeeld {
+  font-size: 11px; font-weight: 700;
+  padding: 1px 6px; margin-left: 4px;
+  border-radius: 999px; background: #eef1c4; color: #4d5300;
+  vertical-align: 1px;
+}
+
 .tabelvak { overflow-x: auto; background: var(--vlak); border: 1px solid var(--rand); border-radius: 12px; }
 table { border-collapse: collapse; width: 100%; }
 th, td { padding: 10px 12px; text-align: left; vertical-align: middle; }

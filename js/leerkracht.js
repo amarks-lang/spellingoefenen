@@ -12,15 +12,31 @@ const $ = sel => document.querySelector(sel);
 
 const st = {
   user: null,
-  klassen: {},
+  eigen: {},            // klassen waarvan ik eigenaar ben
+  gedeeldeKlassen: {},  // klassen die een collega met mij deelt
+  gedeeldStops: new Map(),
+  klassen: {},          // eigen + gedeeld samen
   klasId: null,
   leerlingen: {},
   voortgang: {},
   pogingen: {},
   foutenVan: null,
-  stopKlassen: null,
+  stopKlassen: [],
   stopKlas: []
 };
+
+// E-mailadres als sleutel in de database: punten mogen niet, dus worden het komma's.
+// Moet precies overeenkomen met auth.token.email.toLowerCase().replace('.', ',') in de rules.
+function mailSleutel(mail) {
+  return String(mail || '').trim().toLowerCase().replace(/\./g, ',');
+}
+function mailUitSleutel(sleutel) {
+  return String(sleutel).replace(/,/g, '.');
+}
+function benEigenaar(id = st.klasId) {
+  const k = st.klassen[id];
+  return !!(k && st.user && k.eigenaar === st.user.uid);
+}
 
 const SECTIES = ['#s-melding', '#s-laden', '#s-login', '#s-app'];
 function toonSectie(id) {
@@ -116,9 +132,16 @@ $('#login').addEventListener('click', async () => {
 $('#uitloggen').addEventListener('click', () => signOut(auth));
 
 function stopAlles() {
-  if (st.stopKlassen) st.stopKlassen();
-  st.stopKlassen = null;
+  st.stopKlassen.forEach(stop => stop());
+  st.stopKlassen = [];
+  st.gedeeldStops.forEach(stop => stop());
+  st.gedeeldStops.clear();
+  st.eigen = {};
+  st.gedeeldeKlassen = {};
+  st.klassen = {};
+  st.klasId = null;
   stopKlas();
+  wisAlert();
 }
 function stopKlas() {
   st.stopKlas.forEach(stop => stop());
@@ -128,25 +151,62 @@ function stopKlas() {
 // ---------- klassen ----------
 
 function luisterNaarKlassen() {
+  // 1. klassen waarvan ik eigenaar ben
   const q = query(ref(db, 'klassen'), orderByChild('eigenaar'), equalTo(st.user.uid));
-  st.stopKlassen = onValue(q, snap => {
-    st.klassen = snap.val() || {};
-    const ids = Object.keys(st.klassen);
-    if (!st.klasId || !st.klassen[st.klasId]) {
-      let bewaard = null;
-      try { bewaard = localStorage.getItem('spellingoefenen.klas'); } catch (e) { /* geen opslag */ }
-      kiesKlas(ids.includes(bewaard) ? bewaard : (ids.sort((a, b) => st.klassen[a].naam.localeCompare(st.klassen[b].naam, 'nl'))[0] || null));
-    } else {
-      tekenKlasKop();
+  st.stopKlassen.push(onValue(q, snap => {
+    st.eigen = snap.val() || {};
+    klassenBijgewerkt();
+  }, e => toonMelding(foutBericht(e, 'Klassen laden'))));
+
+  // 2. klassen die een duo-collega met mij deelt
+  st.stopKlassen.push(onValue(ref(db, `gedeeld/${mailSleutel(st.user.email)}`), snap => {
+    const ids = Object.keys(snap.val() || {});
+    for (const [id, stop] of st.gedeeldStops) {
+      if (!ids.includes(id)) {
+        stop();
+        st.gedeeldStops.delete(id);
+        delete st.gedeeldeKlassen[id];
+      }
     }
-    tekenKlaslijst();
-  }, e => toonMelding(foutBericht(e, 'Klassen laden')));
+    for (const id of ids) {
+      if (st.gedeeldStops.has(id)) continue;
+      st.gedeeldStops.set(id, onValue(ref(db, `klassen/${id}`), s => {
+        if (s.exists()) st.gedeeldeKlassen[id] = s.val();
+        else delete st.gedeeldeKlassen[id];
+        klassenBijgewerkt();
+      }, () => {
+        // geen toegang meer (collega weggehaald of klas gewist)
+        delete st.gedeeldeKlassen[id];
+        klassenBijgewerkt();
+      }));
+    }
+    klassenBijgewerkt();
+  }, e => console.error(e)));
+}
+
+function klassenBijgewerkt() {
+  st.klassen = { ...st.gedeeldeKlassen, ...st.eigen };
+  const ids = Object.keys(st.klassen);
+  if (!st.klasId || !st.klassen[st.klasId]) {
+    let bewaard = null;
+    try { bewaard = localStorage.getItem('spellingoefenen.klas'); } catch (e) { /* geen opslag */ }
+    const opNaam = ids.sort((a, b) => st.klassen[a].naam.localeCompare(st.klassen[b].naam, 'nl'));
+    const keuze = ids.includes(bewaard) ? bewaard : (opNaam[0] || null);
+    if (keuze !== st.klasId) kiesKlas(keuze);
+    else { $('#geen-klas').hidden = !!keuze; $('#klas').hidden = !keuze; }
+  } else {
+    tekenKlasKop();
+  }
+  tekenKlaslijst();
 }
 
 function tekenKlaslijst() {
   const items = Object.entries(st.klassen)
     .sort((a, b) => a[1].naam.localeCompare(b[1].naam, 'nl'))
-    .map(([id, k]) => `<li><button class="klasknop${id === st.klasId ? ' actief' : ''}" data-id="${esc(id)}">${esc(k.naam)}</button></li>`);
+    .map(([id, k]) => {
+      const gedeeld = k.eigenaar !== st.user.uid ? ' <span class="label-gedeeld">gedeeld</span>' : '';
+      return `<li><button class="klasknop${id === st.klasId ? ' actief' : ''}" data-id="${esc(id)}">${esc(k.naam)}${gedeeld}</button></li>`;
+    });
   $('#klaslijst').innerHTML = items.join('');
 }
 
@@ -173,7 +233,9 @@ $('#nieuwe-klas').addEventListener('submit', async e => {
   try {
     const code = await vrijeCode();
     const klasRef = push(ref(db, 'klassen'));
-    await set(klasRef, { naam, eigenaar: st.user.uid, code, aangemaakt: serverTimestamp() });
+    await set(klasRef, {
+      naam, eigenaar: st.user.uid, eigenaarMail: st.user.email || '', code, aangemaakt: serverTimestamp()
+    });
     await set(ref(db, `klascodes/${code}`), klasRef.key);
     $('#klasnaam').value = '';
     kiesKlas(klasRef.key);
@@ -196,6 +258,12 @@ function alertInline(tekst) {
   p.textContent = tekst;
   clearTimeout(alertInline.t);
   alertInline.t = setTimeout(() => p.remove(), 8000);
+}
+
+function wisAlert() {
+  clearTimeout(alertInline.t);
+  const p = $('#app-fout');
+  if (p) p.remove();
 }
 
 function kiesKlas(id) {
@@ -224,17 +292,76 @@ function kiesKlas(id) {
 function tekenKlasKop() {
   const k = st.klassen[st.klasId];
   if (!k) return;
+  const eigenaar = benEigenaar();
   $('#klas-naam').textContent = k.naam;
   $('#klas-code').textContent = k.code;
+  $('#klas-verwijderen').hidden = !eigenaar;
+  $('#delen').hidden = !eigenaar;
+  $('#gedeeld-door').hidden = eigenaar;
+  if (!eigenaar) {
+    $('#gedeeld-door').textContent = k.eigenaarMail
+      ? `Gedeeld door ${k.eigenaarMail}. Jullie zien dezelfde leerlingen en resultaten.`
+      : 'Gedeeld door je duo-collega. Jullie zien dezelfde leerlingen en resultaten.';
+    return;
+  }
+  // Oudere klassen hebben nog geen eigenaarMail; die vullen we aan zodat collega's zien van wie de klas is.
+  if (!k.eigenaarMail && st.user.email) {
+    update(ref(db, `klassen/${st.klasId}`), { eigenaarMail: st.user.email }).catch(e => console.error(e));
+  }
+  const collegas = Object.keys(k.collegas || {}).map(mailUitSleutel).sort();
+  $('#collega-lijst').innerHTML = collegas.length
+    ? collegas.map(m => `<li class="collega"><span>${esc(m)}</span><button class="weghalen" data-mail="${esc(m)}" aria-label="${esc(m)} weghalen">×</button></li>`).join('')
+    : '<li class="zacht">Nog met niemand gedeeld.</li>';
 }
+
+// ---------- klas delen met een duo-collega ----------
+
+$('#nieuwe-collega').addEventListener('submit', async e => {
+  e.preventDefault();
+  const invoer = $('#collega-mail');
+  const mail = invoer.value.trim().toLowerCase();
+  const id = st.klasId;
+  if (!id || !benEigenaar(id)) return;
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return alertInline('Vul een geldig e-mailadres in.');
+  if (!mail.endsWith(`@${LEERKRACHT_DOMEIN}`)) return alertInline(`Je collega kan alleen inloggen met een @${LEERKRACHT_DOMEIN}-account.`);
+  if (mail === (st.user.email || '').toLowerCase()) return alertInline('Dat ben je zelf: je ziet deze klas al.');
+  const sleutel = mailSleutel(mail);
+  try {
+    await update(ref(db), {
+      [`klassen/${id}/collegas/${sleutel}`]: true,
+      [`gedeeld/${sleutel}/${id}`]: true
+    });
+    invoer.value = '';
+    wisAlert();
+  } catch (err) {
+    alertInline(foutBericht(err, 'Collega toevoegen'));
+  }
+});
+
+$('#collega-lijst').addEventListener('click', async e => {
+  const knop = e.target.closest('.weghalen');
+  if (!knop || !benEigenaar()) return;
+  const sleutel = mailSleutel(knop.dataset.mail);
+  try {
+    await update(ref(db), {
+      [`klassen/${st.klasId}/collegas/${sleutel}`]: null,
+      [`gedeeld/${sleutel}/${st.klasId}`]: null
+    });
+  } catch (err) {
+    alertInline(foutBericht(err, 'Collega weghalen'));
+  }
+});
 
 $('#klas-verwijderen').addEventListener('click', e => {
   const k = st.klassen[st.klasId];
-  if (!k) return;
+  if (!k || !benEigenaar()) return;
   bevestigKnop(e.currentTarget, 'Klik nog eens: alles van deze klas wissen', async () => {
     const id = st.klasId;
     try {
       stopKlas();
+      const opruimen = {};
+      for (const sleutel of Object.keys(k.collegas || {})) opruimen[`gedeeld/${sleutel}/${id}`] = null;
+      if (Object.keys(opruimen).length) await update(ref(db), opruimen);
       await remove(ref(db, `klascodes/${k.code}`));
       await remove(ref(db, `pogingen/${id}`));
       await remove(ref(db, `voortgang/${id}`));
